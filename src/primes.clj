@@ -25,7 +25,7 @@
         all-steps (conj most-steps
                         (- circumference
                            (apply + most-steps)))]
-    
+
     (concat (sort primes)
             ;; This sequence contains no numbers that are divisible by
             ;; any of the numbers in primes. However, that includes 1,
@@ -36,28 +36,33 @@
   (lazy-seq
    (loop [input input
           iterators iterators]
-     (let [[next-composite p] (first iterators)
-           candidate (first input)]
-       (if (< candidate next-composite)
+     (let [candidate (first input)
+
+           advanced-iterators (->> iterators
+                                   (take-while #(> candidate (second %)))
+                                   (reduce (fn [iters [p multiple]]
+                                             (assoc iters p (+ multiple p)))
+                                           iterators))
+           [p next-multiple] (first advanced-iterators)]
+       (if (== candidate next-multiple)
+         ;; found a multiple of an existing prime (i.e. a
+         ;; composite number)
+         (do #_(println "RECURRING " {:candidate candidate :next-multiple next-multiple :p p :iterators iterators :input-peek (take 10 input)})
+             (recur (rest input) advanced-iterators))
          ;; we found a prime; emit it and add an iterator to our set
-         (cons candidate
-               (primes-1 (rest input)
-                         (assoc iterators candidate (* candidate candidate))))
-         ;; we found a composite number; advance all iterators past
-         ;; it, skip it, and resume the search
-         (recur (rest input)
-                (->> iterators
-                     (take-while #(== candidate (second %)))
-                     ))
-         )))))
+         (do
+           #_(println "EMITTING " {:candidate candidate :next-multiple next-multiple :p p :iterators iterators :input-peek (take 10 input)})
+           ;; found a new prime
+           (cons candidate
+                 (primes-1 (rest input)
+                           (assoc advanced-iterators candidate (* candidate candidate))))))))))
 
 (defn primes
-  ([] (primes [2 3 5 7]))
+  ([] (primes [2 3 5 7 11]))
   ([wheel-primes]
      (let [input (drop (count wheel-primes) (wheel wheel-primes))
            next-prime (first input)]
        (concat wheel-primes
                (list next-prime)
                (primes-1 (rest input)
-                         (priority-map next-prime (* next-prime next-prime))))))
-)
+                         (priority-map next-prime (* next-prime next-prime)))))))

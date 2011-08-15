@@ -11,7 +11,7 @@
 
 (defn wheel [primes]
   (let [circumference (apply * primes)
-        relatively-prime? (fn [x] (not-any? #(= 0 (mod x %)) primes))
+        relatively-prime? (fn [x] (not-any? #(== 0 (mod x %)) primes))
         ;; This produces all but the last step.
         most-steps (->> (range 0 circumference)
                         (filter relatively-prime?)

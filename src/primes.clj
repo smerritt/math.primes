@@ -32,30 +32,31 @@
             ;; and 1 isn't prime.
             (drop 1 (wheel-1 all-steps 1 0)))))
 
-(defn primes-1 [input iterators]
-  (lazy-seq
-   (loop [input input
-          iterators iterators]
-     (let [candidate (first input)
+(defn move-past [iterators n]
+  (let [[p next-multiple] (first iterators)]
+    (if (> n next-multiple)
+      (recur (assoc iterators p (+ next-multiple p))
+             n)
+      iterators)))
 
-           advanced-iterators (->> iterators
-                                   (take-while #(> candidate (second %)))
-                                   (reduce (fn [iters [p multiple]]
-                                             (assoc iters p (+ multiple p)))
-                                           iterators))
-           [p next-multiple] (first advanced-iterators)]
-       (if (== candidate next-multiple)
-         ;; found a multiple of an existing prime (i.e. a
-         ;; composite number)
-         (do #_(println "RECURRING " {:candidate candidate :next-multiple next-multiple :p p :iterators iterators :input-peek (take 10 input)})
-             (recur (rest input) advanced-iterators))
-         ;; we found a prime; emit it and add an iterator to our set
-         (do
-           #_(println "EMITTING " {:candidate candidate :next-multiple next-multiple :p p :iterators iterators :input-peek (take 10 input)})
-           ;; found a new prime
-           (cons candidate
-                 (primes-1 (rest input)
-                           (assoc advanced-iterators candidate (* candidate candidate))))))))))
+(defn primes-1 [input iterators]
+  (let [candidate (first input)
+        advanced-iterators #_(move-past iterators candidate)
+        (->> iterators
+             (take-while #(> candidate (second %)))
+             (reduce (fn [iters [p multiple]]
+                       (assoc iters p (+ multiple p)))
+                     iterators))
+        [p next-multiple] (first advanced-iterators)]
+    (if (== candidate next-multiple)
+      ;; found a multiple of an existing prime (i.e. a
+      ;; composite number); skip it and keep looking
+      (recur (rest input) advanced-iterators)
+      ;; we found a prime; emit it and add an iterator to our set
+      (lazy-seq
+       (cons candidate
+             (primes-1 (rest input)
+                       (assoc advanced-iterators candidate (* candidate candidate))))))))
 
 (defn primes
   ([] (primes [2 3 5 7 11]))

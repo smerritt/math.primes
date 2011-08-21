@@ -9,4 +9,5 @@
        5 (nth (primes) 2)
        7919 (nth (primes) 999)
        57881 (nth (primes) 5863)
-       104729 (nth (primes) 9999)))
+       104729 (nth (primes) 9999)
+       1299827 (nth (primes) 100007)))

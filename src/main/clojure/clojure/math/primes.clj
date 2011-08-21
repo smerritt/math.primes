@@ -1,5 +1,9 @@
-(ns primes
-  ( :use clojure.contrib.priority-map))
+(ns
+    ^{:author "Samuel Merritt"
+      :doc "This library provides the primes function, which returns a
+            lazy sequence of all the prime numbers."}
+  clojure.math.primes
+  (:use clojure.contrib.priority-map))
 
 (defn wheel-1 [step-sizes start count-generated]
   (lazy-seq
@@ -32,21 +36,17 @@
             ;; and 1 isn't prime.
             (drop 1 (wheel-1 all-steps 1 0)))))
 
-(defn move-past [iterators n]
-  (let [[p next-multiple] (first iterators)]
-    (if (> n next-multiple)
-      (recur (assoc iterators p (+ next-multiple p))
-             n)
-      iterators)))
-
 (defn primes-1 [input iterators]
   (let [candidate (first input)
-        advanced-iterators #_(move-past iterators candidate)
-        (->> iterators
-             (take-while #(> candidate (second %)))
-             (reduce (fn [iters [p multiple]]
-                       (assoc iters p (+ multiple p)))
-                     iterators))
+        advanced-iterators (->> iterators
+                                (take-while #(> candidate (second %)))
+                                (reduce (fn [iters [p multiple]]
+                                          (assoc iters p (+ multiple
+                                                            (* p
+                                                               (+ (quot (- candidate multiple) p)
+                                                                  (min (rem (- candidate multiple) p) 1))))
+                                                 ))
+                                        iterators))
         [p next-multiple] (first advanced-iterators)]
     (if (== candidate next-multiple)
       ;; found a multiple of an existing prime (i.e. a
